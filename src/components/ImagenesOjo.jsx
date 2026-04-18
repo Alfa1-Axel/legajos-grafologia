@@ -279,23 +279,36 @@ export default function ImagenesOjo({ form, update }) {
         )}
 
         {zoomSrc && (
-          <div>
-            <div
-              ref={wrapRef}
-              style={{
-                position:'relative', background:'var(--dark)',
-                borderRadius:'var(--r)', border:'1px solid var(--border)',
-                overflow:'hidden', cursor:'crosshair'
-              }}
-              onMouseMove={onMouseMove}
-              onMouseLeave={onMouseLeave}
-            >
-              <img
-                ref={imgRef}
-                src={zoomSrc}
-                alt="Ojo para análisis"
-                style={{ display:'block', width:'100%', height:'auto', userSelect:'none' }}
-              />
+  <div>
+    <div
+      ref={wrapRef}
+      style={{
+        position:'relative',
+        background:'var(--dark)',
+        borderRadius:'var(--r)',
+        border:'1px solid var(--border)',
+        overflow:'hidden',
+        cursor:'crosshair',
+        maxHeight:'500px',        // ← límite de alto
+        display:'flex',
+        alignItems:'flex-start',
+      }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+    >
+      <img
+        ref={imgRef}
+        src={zoomSrc}
+        alt="Ojo para análisis"
+        style={{
+          display:'block',
+          width:'100%',
+          height:'100%',
+          maxHeight:'500px',       // ← mismo límite
+          objectFit:'contain',     // ← no recorta, ajusta
+          userSelect:'none',
+        }}
+      />
 
               {CLOCK_POSITIONS.map(p => (
                 <div
