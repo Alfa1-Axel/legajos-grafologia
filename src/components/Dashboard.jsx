@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import * as XLSX from 'xlsx'
 
 function padId(n) { return String(n).padStart(3, '0') }
+
+const LOGO_URL = 'https://i.imgur.com/oQ0t2v2.png'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -45,6 +48,50 @@ export default function Dashboard() {
     navigate('/login')
   }
 
+  function exportarExcel() {
+    const filas = legajos.map(l => ({
+      'Legajo':               padId(l.num),
+      'Fecha Escritura':      l.fecha_escritura || '',
+      'Edad':                 l.edad || '',
+      'Sexo':                 l.sexo || '',
+      'Escolaridad':          l.escolaridad || '',
+      'Lateralidad':          l.lateralidad || '',
+      'Diagnóstico':          l.diagnostico || '',
+      'Fase / Estadio':       l.fase || '',
+      'Medicamentos':         l.medicamentos || '',
+      'Detalle Medicamentos': l.medicamentos_detalle || '',
+      'Hora':                 l.hora || '',
+      'Lugar':                l.lugar || '',
+      'Instrumento':          l.instrumento || '',
+      'Tipo Papel':           l.papel || '',
+      'Tipo Escrito':         l.tipo_escrito || '',
+      'Estado Anímico':       l.animo || '',
+      'Limitaciones':         l.limitaciones || '',
+      'Análisis Correspond.': l.analisis_correspondencia || '',
+      'Consentimiento':       l.c_acepta ? 'Sí' : 'No',
+      'DNI Firmante':         l.c_dni || '',
+      'Obs. General':         l.obs_general || '',
+      'Obs. Escritura':       l.obs_escritura || '',
+      'Obs. Psicológicas':    l.obs_psico || '',
+      'Correspondencia Diag': l.obs_corr || '',
+      'Conclusiones':         l.obs_concl || '',
+      'Imágenes':             (l.images || []).filter(Boolean).length,
+      'Fecha Registro':       l.created_at ? new Date(l.created_at).toLocaleDateString('es-AR') : '',
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(filas)
+
+    // Ancho de columnas automático
+    const colWidths = Object.keys(filas[0] || {}).map(key => ({
+      wch: Math.max(key.length, 15)
+    }))
+    ws['!cols'] = colWidths
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Legajos')
+    XLSX.writeFile(wb, 'Legajos_Grafologia_' + new Date().toISOString().split('T')[0] + '.xlsx')
+  }
+
   const now = new Date()
   const filtered = legajos.filter(l => {
     const idMatch = !filterId || padId(l.num).includes(filterId)
@@ -63,16 +110,20 @@ export default function Dashboard() {
     <>
       <header className="hdr">
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <div className="hdr-logo">G</div>
+          <img
+            src={LOGO_URL}
+            alt="Logo"
+            style={{ height:38, width:38, objectFit:'contain', borderRadius:'50%' }}
+            onError={e => { e.target.style.display='none' }}
+          />
           <div>
             <div className="hdr-title">Legajos Grafológicos</div>
             <div className="hdr-sub">Sistema de Registro Digital</div>
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button className="btn btn-gold" onClick={() => navigate('/legajo/nuevo')}>
-            + Nuevo Legajo
-          </button>
+          <button className="btn btn-outline" onClick={exportarExcel}>⬇ Excel</button>
+          <button className="btn btn-gold" onClick={() => navigate('/legajo/nuevo')}>+ Nuevo Legajo</button>
           <button className="btn btn-outline" onClick={handleLogout}>Salir</button>
         </div>
       </header>
@@ -114,9 +165,7 @@ export default function Dashboard() {
         </div>
 
         {loading && (
-          <p style={{ color:'var(--text3)', textAlign:'center', padding:'2rem' }}>
-            Cargando...
-          </p>
+          <p style={{ color:'var(--text3)', textAlign:'center', padding:'2rem' }}>Cargando...</p>
         )}
 
         {!loading && filtered.length === 0 && (
