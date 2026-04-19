@@ -123,6 +123,9 @@ export default function Dashboard() {
         </div>
         <div style={{ display:'flex', gap:8 }}>
           <button className="btn btn-outline" onClick={exportarExcel}>⬇ Excel</button>
+          <button className="btn btn-outline" onClick={() => navigate('/grafogenesis')}>
+  🧠 Grafogénesis
+</button>
           <button className="btn btn-gold" onClick={() => navigate('/legajo/nuevo')}>+ Nuevo Legajo</button>
           <button className="btn btn-outline" onClick={handleLogout}>Salir</button>
         </div>
