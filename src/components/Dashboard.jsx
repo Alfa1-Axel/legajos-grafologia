@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [filterId, setFilterId] = useState('')
   const [filterFecha, setFilterFecha] = useState('')
   const [openCard, setOpenCard] = useState(null)
+const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -108,29 +109,61 @@ export default function Dashboard() {
 
   return (
     <>
-      <header className="hdr">
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <img
-            src={LOGO_URL}
-            alt="Logo"
-            style={{ height:38, width:38, objectFit:'contain', borderRadius:'50%' }}
-            onError={e => { e.target.style.display='none' }}
-          />
-          <div>
-            <div className="hdr-title">Legajos Grafológicos</div>
-            <div className="hdr-sub">Sistema de Registro Digital</div>
-          </div>
-        </div>
-        <div style={{ display:'flex', gap:8 }}>
-          <button className="btn btn-outline" onClick={exportarExcel}>⬇ Excel</button>
-          <button className="btn btn-outline" onClick={() => navigate('/grafogenesis')}>
-  🧠 Grafogénesis
-</button>
-          <button className="btn btn-gold" onClick={() => navigate('/legajo/nuevo')}>+ Nuevo Legajo</button>
-          <button className="btn btn-outline" onClick={handleLogout}>Salir</button>
-        </div>
-      </header>
+  <style>{`
+    @media (max-width: 640px) {
+      .dash-btns { display: none !important; }
+      .dash-hamburger { display: flex !important; }
+    }
+    @media (min-width: 641px) {
+      .dash-hamburger { display: none !important; }
+      .dash-btns { display: flex !important; }
+    }
+  `}</style>
 
+  <header className="hdr">
+    <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1 }}>
+      <img
+        src={LOGO_URL} alt="Logo"
+        style={{ height:36, width:36, objectFit:'contain', borderRadius:'50%', background:'white', padding:2, flexShrink:0 }}
+        onError={e => { e.target.style.display='none' }}
+      />
+      <div style={{ minWidth:0 }}>
+        <div className="hdr-title" style={{ whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+          Legajos Grafológicos
+        </div>
+        <div className="hdr-sub">Sistema de Registro Digital</div>
+      </div>
+    </div>
+
+    {/* Desktop */}
+    <div className="dash-btns" style={{ display:'flex', gap:8, flexShrink:0 }}>
+      <button className="btn btn-outline btn-sm" onClick={exportarExcel}>⬇ Excel</button>
+      <button className="btn btn-outline btn-sm" onClick={() => navigate('/grafogenesis')}>🧠 Grafogénesis</button>
+      <button className="btn btn-gold btn-sm" onClick={() => navigate('/legajo/nuevo')}>+ Nuevo Legajo</button>
+      <button className="btn btn-outline btn-sm" onClick={handleLogout}>Salir</button>
+    </div>
+
+    {/* Mobile */}
+    <button
+      className="dash-hamburger"
+      onClick={() => setMenuOpen(v => !v)}
+      style={{ display:'none', padding:8, borderRadius:'var(--r)', border:'1px solid var(--border)', background:'transparent', color:'var(--gold)', cursor:'pointer', fontSize:22, lineHeight:1, flexShrink:0 }}
+    >☰</button>
+  </header>
+
+  {/* Menú móvil */}
+  {menuOpen && (
+    <div style={{
+      position:'fixed', top:62, left:0, right:0, zIndex:190,
+      background:'var(--dark2)', borderBottom:'1px solid var(--border2)',
+      padding:'1rem', display:'flex', flexDirection:'column', gap:8
+    }}>
+      <button className="btn btn-gold" onClick={() => { setMenuOpen(false); navigate('/legajo/nuevo') }} style={{ padding:'12px' }}>+ Nuevo Legajo</button>
+      <button className="btn btn-outline" onClick={() => { setMenuOpen(false); navigate('/grafogenesis') }} style={{ padding:'12px' }}>🧠 Grafogénesis</button>
+      <button className="btn btn-outline" onClick={() => { setMenuOpen(false); exportarExcel() }} style={{ padding:'12px' }}>⬇ Excel</button>
+      <button className="btn btn-outline" onClick={() => { setMenuOpen(false); handleLogout() }} style={{ padding:'12px' }}>Salir</button>
+    </div>
+  )}
       <main className="main">
         <h1 style={{
           fontFamily:'Cormorant Garamond, serif', fontSize:26,

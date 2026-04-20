@@ -127,9 +127,9 @@ export async function generarPDFGrafo(evaluacion, datos) {
 
   // Logo centrado
   if(logoB64){
-    try{ doc.addImage(logoB64,'PNG',W/2-20,18,40,40) }catch{}
-  }
-
+    try{ doc.addImage(logoB64,'PNG',W/2-20,18,40,40) } catch {
+  // Ignorar error si falla la carga de imagen - el PDF se generará sin logo
+}
   // Título — debajo del logo con espacio
   doc.setFont('helvetica','bold'); doc.setFontSize(28)
   doc.setTextColor(...DARK); doc.text('GRAFOGÉNESIS®', 22, 82)
@@ -264,4 +264,5 @@ export async function generarPDFGrafo(evaluacion, datos) {
   document.body.appendChild(a); a.click()
   document.body.removeChild(a)
   setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
 }
