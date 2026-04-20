@@ -1,15 +1,15 @@
 import { jsPDF } from 'jspdf'
 
 const DIMENSIONES = [
-  { id:'sentimental',  nombre:'Dimensión Sentimental' },
-  { id:'ideologica',   nombre:'Dimensión Ideológica' },
-  { id:'vital',        nombre:'Dimensión Vital y Protagónica' },
-  { id:'afectiva',     nombre:'Dimensión Afectiva y Vincular' },
-  { id:'logica',       nombre:'Dimensión Lógica y Ética' },
-  { id:'intuitiva',    nombre:'Dimensión Intuitiva y Apertura' },
-  { id:'defensiva',    nombre:'Dimensión Defensiva y Diplomacia' },
-  { id:'instintiva',   nombre:'Dimensión Instintiva y Corporal' },
-  { id:'autonomia',    nombre:'Dimensión de Autonomía y Rebeldía' },
+  { id:'sentimental', nombre:'Dimensión Sentimental' },
+  { id:'instintiva',  nombre:'Dimensión Instintiva y Corporal' },
+  { id:'intuitiva',   nombre:'Dimensión Intuitiva y Apertura' },
+  { id:'autonomia',   nombre:'Dimensión de Autonomía y Rebeldía' },
+  { id:'vital',       nombre:'Dimensión Vital y Protagónica' },
+  { id:'afectiva',    nombre:'Dimensión Afectiva y Vincular' },
+  { id:'ideologica',  nombre:'Dimensión Ideológica' },
+  { id:'defensiva',   nombre:'Dimensión Defensiva y Diplomacia' },
+  { id:'logica',      nombre:'Dimensión Lógica y Ética' },
 ]
 
 const PERFIL_TEXTOS = {
@@ -24,7 +24,22 @@ const DINAMICA_TEXTOS = {
   compensacion: 'Dinámica de Compensación (+/x): Ante la falta de energía vital o acción real, el sujeto se refugia en sueños de potencia e idealismo poético para evadir la frustración.'
 }
 
-export function generarPDFGrafo(evaluacion, datos) {
+async function loadImageBase64(url) {
+  try {
+    const res = await fetch(url)
+    const blob = await res.blob()
+    return new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function generarPDFGrafo(evaluacion, datos) {
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' })
   const W=210, mL=18, mR=18, cW=W-mL-mR
   let y=0
@@ -86,7 +101,7 @@ export function generarPDFGrafo(evaluacion, datos) {
     y+=rows*11+8
   }
 
-  const r = evaluacion.resultados || {}
+  const r = evaluacion.resultados||{}
   const fecha = evaluacion.created_at
     ? new Date(evaluacion.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'})
     : ''
@@ -100,34 +115,50 @@ export function generarPDFGrafo(evaluacion, datos) {
   const tTotal=tA+tB+tC+tD||1
   const pct=v=>((v/tTotal)*100).toFixed(2)+'%'
 
+  // Cargar logo
+  const logoB64 = await loadImageBase64('https://i.imgur.com/ukSxvlb.png')
+
   // ── TAPA ────────────────────────────────────────────────────
   doc.setFillColor(...WHITE); doc.rect(0,0,W,297,'F')
   doc.setFillColor(...GOLD); doc.rect(0,0,5,297,'F')
   doc.setFillColor(...DARK)
-  doc.rect(5,55,W-5,.5,'F'); doc.rect(5,115,W-5,.5,'F')
-  doc.setFont('helvetica','bold'); doc.setFontSize(30)
-  doc.setTextColor(...DARK); doc.text('GRAFOGÉNESIS®',22,82)
-  doc.setFontSize(13); doc.setFont('helvetica','normal')
-  doc.setTextColor(...MUTED); doc.text('Informe de Evaluación Integral',22,93)
-  doc.setFontSize(18); doc.setFont('helvetica','bold')
+  doc.rect(5,75,W-5,.5,'F')
+  doc.rect(5,145,W-5,.5,'F')
+
+  // Logo centrado
+  if(logoB64){
+    try{ doc.addImage(logoB64,'PNG',W/2-20,18,40,40) }catch{}
+  }
+
+  // Título — debajo del logo con espacio
+  doc.setFont('helvetica','bold'); doc.setFontSize(28)
+  doc.setTextColor(...DARK); doc.text('GRAFOGÉNESIS®', 22, 82)
+  doc.setFontSize(12); doc.setFont('helvetica','normal')
+  doc.setTextColor(...MUTED); doc.text('Informe de Evaluación Integral', 22, 92)
+
+  // Nombre en su propio bloque separado
+  doc.setFontSize(16); doc.setFont('helvetica','bold')
   doc.setTextColor(...DARK)
-  doc.text(evaluacion.nombre+' '+evaluacion.apellido,22,116)
+  const nombreCompleto = evaluacion.nombre+' '+evaluacion.apellido
+  doc.text(nombreCompleto, 22, 155)
+
   if(fecha){
     doc.setFontSize(10); doc.setFont('helvetica','normal')
-    doc.setTextColor(...MUTED); doc.text('Fecha: '+fecha,22,126)
+    doc.setTextColor(...MUTED); doc.text('Fecha: '+fecha, 22, 165)
   }
+
   doc.setFontSize(8.5); doc.setTextColor(...GOLD)
-  doc.text('Grafologa Marcela Zapata',22,268)
-  doc.text('Grafologa Magdalena Martínez',22,274)
-  doc.text('Grafologo Leonardo Lembo',22,280)
+  doc.text('Grafologa Marcela Zapata', 22, 268)
+  doc.text('Grafologa Magdalena Martínez', 22, 274)
+  doc.text('Grafologo Leonardo Lembo', 22, 280)
   doc.setFontSize(7); doc.setTextColor(...MUTED)
-  doc.text('Documento confidencial — Uso exclusivo del profesional evaluador',22,288)
+  doc.text('Documento confidencial — Uso exclusivo del profesional evaluador', 22, 288)
 
   // ── DATOS PERSONALES ────────────────────────────────────────
   newPage()
   stitle('Datos Personales del Evaluado')
   row2col([
-    ['Nombre y Apellido', evaluacion.nombre+' '+evaluacion.apellido],
+    ['Nombre y Apellido', nombreCompleto],
     ['Fecha de Evaluación', fecha],
     ['Edad', datos.edad],
     ['Estado Civil', datos.estadoCivil],
@@ -143,11 +174,11 @@ export function generarPDFGrafo(evaluacion, datos) {
   stitle('1. Resumen Estadístico de Dimensiones')
   chk(50)
   doc.setFillColor(...SURF); doc.roundedRect(mL,y-2,cW,40,3,3,'F')
-  const badges = [
-    ['Predominante +', tA, datos.nivelA],
-    ['Intermedia x',   tB, datos.nivelB],
-    ['Irregular =',    tC, datos.nivelC],
-    ['Deficitaria -',  tD, datos.nivelD],
+  const badges=[
+    ['Predominante +',tA,datos.nivelA],
+    ['Intermedia x',  tB,datos.nivelB],
+    ['Irregular =',   tC,datos.nivelC],
+    ['Deficitaria -', tD,datos.nivelD],
   ]
   badges.forEach(([label,val,nivel],i)=>{
     const ry=y+4+i*9
@@ -161,26 +192,26 @@ export function generarPDFGrafo(evaluacion, datos) {
   })
   y+=44
 
-  // Tabla por dimensión
   stitle('Resultados por Dimensión')
   doc.setFillColor(...DARK); doc.rect(mL,y,cW,8,'F')
   doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...GOLD)
   const cols=[mL+2,mL+72,mL+87,mL+102,mL+117,mL+135,mL+155]
   ;['Dimensión','+','x','=','-','Dom.','Rango'].forEach((h,i)=>doc.text(h,cols[i],y+5.5))
   y+=10
+
   DIMENSIONES.forEach((dim,di)=>{
     chk(9)
     const d=r[dim.id]; if(!d) return
     if(di%2===0){doc.setFillColor(...SURF);doc.rect(mL,y-1,cW,9,'F')}
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...TEXT)
-    doc.text(dim.nombre,cols[0],y+5)
+    doc.text(dim.nombre, cols[0], y+5)
     ;['A','B','C','D'].forEach((l,li)=>{
-      doc.text(String(d.valores?.[l]||0),cols[li+1],y+5,{align:'right'})
+      doc.text(String(d.valores?.[l]||0), cols[li+1], y+5, {align:'right'})
     })
     doc.setFont('helvetica','bold'); doc.setTextColor(...GOLD)
-    doc.text(d.dominante||'',cols[5],y+5)
+    doc.text(d.dominante||'', cols[5], y+5)
     doc.setFont('helvetica','normal'); doc.setTextColor(...TEXT)
-    doc.text(d.rango||'',cols[6],y+5)
+    doc.text(d.rango||'', cols[6], y+5)
     y+=9
   })
   y+=6
@@ -188,25 +219,25 @@ export function generarPDFGrafo(evaluacion, datos) {
   // ── INTERPRETACIÓN ───────────────────────────────────────────
   newPage()
   stitle('2. Interpretación Cualitativa')
-  chk(20)
-  doc.setFillColor(...SURF); doc.roundedRect(mL,y,cW,16,3,3,'F')
+  chk(22)
+  doc.setFillColor(...SURF); doc.roundedRect(mL,y,cW,18,3,3,'F')
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...TEXT)
-  const pLines = doc.splitTextToSize(PERFIL_TEXTOS[datos.perfil]||'', cW-8)
+  const pLines=doc.splitTextToSize(PERFIL_TEXTOS[datos.perfil]||'', cW-8)
   pLines.forEach((l,i)=>doc.text(l,mL+4,y+6+i*4.5))
-  y+=20
+  y+=22
 
   // ── DINÁMICA ─────────────────────────────────────────────────
   stitle('3. Diagnóstico de Dinámicas Combinadas')
   if(datos.tieneDinamica){
-    chk(20)
-    doc.setFillColor(255,248,225); doc.roundedRect(mL,y,cW,20,3,3,'F')
+    chk(22)
+    doc.setFillColor(255,248,225); doc.roundedRect(mL,y,cW,22,3,3,'F')
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...TEXT)
-    const dLines=doc.splitTextToSize(DINAMICA_TEXTOS[datos.dinamica]||'',cW-8)
+    const dLines=doc.splitTextToSize(DINAMICA_TEXTOS[datos.dinamica]||'', cW-8)
     dLines.forEach((l,i)=>doc.text(l,mL+4,y+6+i*4.5))
-    y+=24
+    y+=26
   } else {
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...MUTED)
-    doc.text('No se detectaron dinámicas combinadas significativas.',mL,y); y+=10
+    doc.text('No se detectaron dinámicas combinadas significativas.', mL, y); y+=10
   }
 
   // ── CONCLUSIONES ─────────────────────────────────────────────
@@ -218,11 +249,11 @@ export function generarPDFGrafo(evaluacion, datos) {
   chk(22)
   doc.setFillColor(...GOLD); doc.rect(mL,y+6,cW,.3,'F'); y+=12
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GOLD)
-  doc.text('Grafologa Marcela Zapata',mL,y)
-  doc.text('Grafologa Magdalena Martínez',W/2,y,{align:'center'})
-  doc.text('Grafologo Leonardo Lembo',W-mR,y,{align:'right'})
+  doc.text('Grafologa Marcela Zapata', mL, y)
+  doc.text('Grafologa Magdalena Martínez', W/2, y, {align:'center'})
+  doc.text('Grafologo Leonardo Lembo', W-mR, y, {align:'right'})
   y+=5; doc.setFontSize(7); doc.setTextColor(...MUTED)
-  doc.text('Documento generado el '+new Date().toLocaleDateString('es-AR'),mL,y)
+  doc.text('Documento generado el '+new Date().toLocaleDateString('es-AR'), mL, y)
 
   // DESCARGA
   const blob=doc.output('blob')
