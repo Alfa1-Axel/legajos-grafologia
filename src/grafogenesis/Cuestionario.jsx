@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import '../styles/global.css'
 
 const DIMENSIONES = [
   { id:'sentimental',  nombre:'Dimensión Sentimental' },

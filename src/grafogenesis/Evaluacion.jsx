@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import '../styles/global.css'
 
 const LOGO_URL = 'https://i.imgur.com/oQ0t2v2.png'
 
