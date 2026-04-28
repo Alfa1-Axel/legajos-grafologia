@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Ficha from './Ficha'
 import Consentimiento from './Consentimiento'
-import ImagenesOjo from './ImagenesOjo'
+import ImagenesOjo from '../components/ImagenesOjo'
 import Observaciones from './Observaciones'
 import { generarPDF } from '../utils/pdf'
 
